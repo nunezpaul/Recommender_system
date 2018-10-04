@@ -18,7 +18,7 @@ rm "ml-latest.zip"
 
 # Splitting the data into training and testing data
 ORIGINAL=`pwd`
-cd dirname $BASH_SOURCE
+cd `dirname $BASH_SOURCE`
 echo Splitting the data into training and testing files...
 python split_data.py
 echo Done!
