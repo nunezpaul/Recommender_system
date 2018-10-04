@@ -43,7 +43,7 @@ def split_data(filename, test_frac, skip_count=False):
     # Store the user and movie max vocab
     if not(skip_count):
         for key in vocab_size.keys():
-            with open('{key}_max.csv'.format(key=key), 'w') as f:
+            with open(filename.replace('ratings.csv', '{key}_max.csv'.format(key=key)), 'w') as f:
                 f.write(str(vocab_size[key]))
 
 if __name__ == '__main__':
