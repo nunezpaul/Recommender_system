@@ -1,27 +1,48 @@
+from os.path import expanduser
 from random import random
 
 
-def split_data(filename, test_percent=0.1):
-    # Train and test files to be written
-    tr = open(filename.replace('ratings', 'train'), 'w')
-    te = open(filename.replace('ratings', 'test'), 'w')
+def split_data(filename, test_frac=0.1):
+    # filenames for train and test data
+    datafilenames = {}
+    datafiles = {}
+    datatypes = ['train', 'test']
+
+    # Placeholder to determine max vocab size
+    vocab_size = {'user': 0, 'movie': 0}
+
+    # Create filename, mkdir if needed and open train and test files to be written
+    for datatype in datatypes:
+        datafilenames[datatype] = filename.replace('ratings', '{dt}'.format(dt=datatype))
+        datafiles[datatype] = open(datafilenames[datatype], 'w')
 
     # Read each line after the header of ratings.csv
     with open(filename, 'r') as f:
         header = f.readline()
-        tr.write(header)
-        te.write(header)
+        for datatype in datatypes:
+            datafiles[datatype].write(header)
 
-        # Randomly split the data into training or testing
+        # Split the data line into training or testing
         for line in f:
-            if random() < test_percent:
-                te.write(line)
+            if random() < test_frac:
+                datafiles['test'].write(line)
             else:
-                tr.write(line)
-    tr.close()
-    te.close()
+                datafiles['train'].write(line)
+
+            arr = dict(zip(['user', 'movie', 'rating', 'time'], line.split(',')))
+            for key in vocab_size.keys():
+                vocab_size[key] = max(vocab_size[key], int(arr[key]))
+
+    # Close the files
+    for datatype in datatypes:
+        datafiles[datatype].close()
+
+    # Store the user and movie max vocab
+    for key in vocab_size.keys():
+        with open('{key}_max.csv'.format(key=key), 'w') as f:
+            f.write(str(vocab_size[key]))
 
 if __name__ == '__main__':
-
-    filename = '/Users/pwork/data/ml-latest/ratings.csv'
+    # TODO: add flag to change filename/location
+    filename = '{home}/data/ml-latest/ratings.csv'.format(home=expanduser("~"))
     split_data(filename=filename)
