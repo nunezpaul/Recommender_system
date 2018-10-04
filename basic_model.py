@@ -21,15 +21,6 @@ class DataConfigBase(object):
             tf.constant([], dtype=tf.float32),
         ]
 
-    def create_data_init(self):
-        # Loading dataset for desired data data
-        dataset = self.create_dataset()
-
-        # Creating iterator, data inits and next_element
-        iterator = tf.data.Iterator.from_structure(dataset.output_types, dataset.output_shapes)
-        self.iter_init = iterator.make_initializer(dataset)
-        self.next_element = iterator.get_next()
-
     def create_dataset(self):
         batch_size = self.batch_size
         dataset = tf.data.TextLineDataset(filenames=self.filename).skip(self.header_lines)
@@ -46,22 +37,42 @@ class DataConfigBase(object):
 
 class TrainDataConfig(DataConfigBase):
     def __init__(self, batch_size=64):
+        super(TrainDataConfig, self).__init__()
         self.batch_size = batch_size
         self.filename = '{home}/data/ml-latest/test.csv'.format(home=self.home)
-        super(TrainDataConfig, self).__init__()
-        self.create_data_init()
+        self.dataset = self.create_dataset()
 
 
 class TestDataConfig(DataConfigBase):
     def __init__(self, batch_size=1024):
+        super(TestDataConfig, self).__init__()
         self.batch_size = batch_size
         self.filename = '{home}/data/ml-latest/test.csv'.format(home=self.home)
-        super(TestDataConfig, self).__init__()
+        self.dataset = self.create_dataset()
+
+class DataConfig(object):
+    def __init__(self):
+        self.configs = {'test': TestDataConfig(), 'train': TrainDataConfig()}
+        self.iter_init = None
+        self.next_element = None
         self.create_data_init()
 
+    def create_data_init(self):
+        keys = ['train', 'test']
 
-class ModelParams(TestDataConfig):
+        # Collect tf.datasets into a dict
+        dataset = dict(zip(keys, [self.configs[key].dataset for key in keys]))
+
+        # Creating iterator, data inits and next_element
+        iterator = tf.data.Iterator.from_structure(dataset['train'].output_types, dataset['train'].output_shapes)
+        self.iter_init = dict(zip(keys, [iterator.make_initializer(dataset[key], name=key) for key in keys]))
+        self.next_element = iterator.get_next()
+
+
+
+class ModelParams(DataConfig):
     def __init__(self):
+        super(ModelParams, self).__init__()
         self.embed_dim = 256
         self.name = 'matrix_factorization'
         self.id = uuid.uuid4()
@@ -70,19 +81,16 @@ class ModelParams(TestDataConfig):
         self.vocab_sizes = {}
         self.embeds = {}
         for key in ['user', 'movie']:
-            with open(self.filename.replace('test.csv', '{k}_max.csv'.format(k=key)), 'r') as f:
+            with open(self.configs['test'].filename.replace('test.csv', '{k}_max.csv'.format(k=key)), 'r') as f:
                 max_vocab = int(f.readline())
-                self.vocab_size[key] = max_vocab
+                self.vocab_sizes[key] = max_vocab
                 self.embeds[key] = k.layers.Embedding(input_dim=max_vocab, output_dim=self.embed_dim)
-
-
-
 
     def embed(self, user, movie, check_shapes=True):
         # Get user and movie embeddings. Dot product is the score
         user_embed = self.embeds['user'](user)
-        movie_embed = self.embed['movie'](movie)
-        pred_rating = tf.matmul(user_embed, movie_embed, transpose_b=True)
+        movie_embed = self.embeds['movie'](movie)
+        pred_rating = tf.reduce_sum(tf.multiply(user_embed, movie_embed), axis=-1)
 
         # Place holder for future iterations of MF model
         intermediates = {}
@@ -111,13 +119,12 @@ class TrainLoss(object):
 
         # Check that shapes are as expected
         assert predictions.shape[1:] == labels.shape[1:] == ()
-        assert metrics['Inaccuracy'].shape == ()
 
         return metrics, predictions, labels
 
 
 class TrainRun(object):
-    def __init__(self, lr=0.001):
+    def __init__(self, lr=0.01):
         self.train_loss = TrainLoss()
         self.writer = {}
         self.eval_metrics = self.train_loss.eval()
@@ -140,7 +147,7 @@ class TrainRun(object):
         self.create_writers()
         init_op = [tf.report_uninitialized_variables(),
                    tf.global_variables_initializer(),
-                   self.train_loss.data_config.iter_init['train']]
+                   self.train_loss.model_params.iter_init['train']]
         init_vals, _, _ = sess.run(init_op)
         print('Initializing Values: \n{init_vals}'.format(init_vals=init_vals))
         print('Finished Initialization.')
@@ -149,20 +156,20 @@ class TrainRun(object):
         for step in range(60 * 10**3):
             _ = sess.run([self.train_op])
             self.step += 1
-            if step % 10**3 == 0:
+            if step % 10**1 == 0:
                 print('Evaluating metrics...')
                 self.report_metrics(sess)
 
     def report_metrics(self, sess):
         # Evaluate using training data here and switch to testing data
         train_store, _ = sess.run(
-            [self.eval_metrics, self.train_loss.data_config.iter_init['test']],
+            [self.eval_metrics, self.train_loss.model_params.iter_init['test']],
         feed_dict={self.train_loss.model_params.is_training: False})
         train_metrics, train_pred, train_lbl = train_store
 
         # Evaluate using testing data and switch to training data
         test_store, _ = sess.run(
-            [self.eval_metrics, self.train_loss.data_config.iter_init['train']],
+            [self.eval_metrics, self.train_loss.model_params.iter_init['train']],
             feed_dict={self.train_loss.model_params.is_training: False})
         test_metrics, test_pred, test_lbl = test_store
 
