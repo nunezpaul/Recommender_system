@@ -13,3 +13,4 @@ echo "Moving file to ~/data/"
 mv ml-latest $DESTINATION
 echo "Cleaning up..."
 rm "ml-latest.zip"
+python split_data.py

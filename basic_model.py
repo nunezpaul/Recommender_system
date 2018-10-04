@@ -80,6 +80,7 @@ class ModelParams(DataConfig):
         self.is_training = tf.placeholder_with_default(True, shape=())
         self.vocab_sizes = {}
         self.embeds = {}
+        self.average = tf.Variable(tf.random_uniform(shape=(1,)))
         for key in ['user', 'movie']:
             with open(self.configs['test'].filename.replace('test.csv', '{k}_max.csv'.format(k=key)), 'r') as f:
                 max_vocab = int(f.readline())
@@ -90,7 +91,7 @@ class ModelParams(DataConfig):
         # Get user and movie embeddings. Dot product is the score
         user_embed = self.embeds['user'](user)
         movie_embed = self.embeds['movie'](movie)
-        pred_rating = tf.reduce_sum(tf.multiply(user_embed, movie_embed), axis=-1)
+        pred_rating = tf.reduce_sum(tf.multiply(user_embed, movie_embed), axis=-1) + self.average
 
         # Place holder for future iterations of MF model
         intermediates = {}
@@ -120,7 +121,10 @@ class TrainLoss(object):
         # Check that shapes are as expected
         assert predictions.shape[1:] == labels.shape[1:] == ()
 
-        return metrics, predictions, labels
+        return metrics, self.round_to_precision(predictions), labels
+
+    def round_to_precision(self, tensor, multiplier=10 ** 1):
+        return tf.round(tensor * multiplier) / multiplier
 
 
 class TrainRun(object):
