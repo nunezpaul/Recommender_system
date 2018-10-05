@@ -1,5 +1,4 @@
 # Modified from https://github.com/jadianes/spark-movie-lens/blob/master/download_dataset.sh
-
 #!/bin/bash
 
 # Check that the system has all the needed packages
@@ -10,7 +9,7 @@ hash unzip 2>/dev/null || { echo >&2 "unzip required.  Aborting."; exit 1; }
 wget http://files.grouplens.org/datasets/movielens/ml-latest.zip
 unzip -o "ml-latest.zip"
 DESTINATION=~/data/
-[ -d $DESTINATION ] && echo "Directory already exists." || mkdir -p $DESTINATION && echo "Making new directory"
+[ -d $DESTINATION ] && echo "Directory already exists." || (mkdir -p $DESTINATION && echo "Making new directory")
 echo "Moving file to ~/data/"
 mv ml-latest $DESTINATION
 echo "Cleaning up..."
@@ -30,8 +29,8 @@ echo Done with sharding! Cleaning up...
 
 # Cleaning up data file directory
 DESTINATION=~/data/ml-latest/shards
-[ -d $DESTINATION ] && echo "Directory already exists." || mkdir -p $DESTINATION && echo "Making new directory."
-mv train_* $DESTINATION
+[ -d $DESTINATION ] && echo "Directory already exists." || (mkdir -p $DESTINATION && echo "Making new directory.")
+mv ~/data/ml-latest/train_* $DESTINATION
 echo Done cleaning. Shards can be found in $DESTINATION
 
 # Returning to original directory
