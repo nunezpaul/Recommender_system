@@ -39,7 +39,8 @@ class TrainDataConfig(DataConfigBase):
     def __init__(self, batch_size=64):
         super(TrainDataConfig, self).__init__()
         self.batch_size = batch_size
-        self.filename = '{home}/data/ml-latest/test.csv'.format(home=self.home)
+        filename = '{home}/data/ml-latest/shards/train.csv'.format(home=self.home)
+        self.filename = [filename.replace('.', '_{shard}.'.format(shard=i)) for i in range(10)]
         self.dataset = self.create_dataset()
 
 
@@ -80,12 +81,12 @@ class ModelParams(DataConfig):
         self.is_training = tf.placeholder_with_default(True, shape=())
         self.vocab_sizes = {}
         self.embeds = {}
-        self.average = tf.Variable(tf.random_uniform(shape=(1,)))
+        self.average = tf.Variable(3.4)
         for key in ['user', 'movie']:
             with open(self.configs['test'].filename.replace('test.csv', '{k}_max.csv'.format(k=key)), 'r') as f:
                 max_vocab = int(f.readline())
                 self.vocab_sizes[key] = max_vocab
-                self.embeds[key] = k.layers.Embedding(input_dim=max_vocab, output_dim=self.embed_dim)
+                self.embeds[key] = k.layers.Embedding(input_dim=max_vocab, output_dim=self.embed_dim, name=key)
 
     def embed(self, user, movie, check_shapes=True):
         # Get user and movie embeddings. Dot product is the score
