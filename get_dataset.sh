@@ -7,8 +7,8 @@ hash unzip 2>/dev/null || { echo >&2 "unzip required.  Aborting."; exit 1; }
 
 # Moving to the same directory as this script
 ORIGINAL=`pwd`
-ROOT= `dirname $BASH_SOURCE`
-cd ROOT
+ROOT=`dirname $BASH_SOURCE`
+cd $ROOT
 
 # Downloading the data files, extracting and moving them to the desired location
 wget http://files.grouplens.org/datasets/movielens/ml-latest.zip
