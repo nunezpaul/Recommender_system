@@ -39,7 +39,7 @@ class TrainDataConfig(DataConfigBase):
     def __init__(self, batch_size=64):
         super(TrainDataConfig, self).__init__()
         self.batch_size = batch_size
-        filename = '{home}/data/ml-latest/shards/train.csv'.format(home=self.home)
+        filename = 'data/ml-latest/shards/train.csv'
         self.filename = [filename.replace('.', '_{shard}.'.format(shard=i)) for i in range(10)]
         self.dataset = self.create_dataset()
 
@@ -48,7 +48,7 @@ class TestDataConfig(DataConfigBase):
     def __init__(self, batch_size=1024):
         super(TestDataConfig, self).__init__()
         self.batch_size = batch_size
-        self.filename = '{home}/data/ml-latest/test.csv'.format(home=self.home)
+        self.filename = 'data/ml-latest/test.csv'.format(home=self.home)
         self.dataset = self.create_dataset()
 
 class DataConfig(object):
@@ -88,7 +88,7 @@ class ModelParams(DataConfig):
                 self.vocab_sizes[key] = max_vocab
                 self.embeds[key] = k.layers.Embedding(input_dim=max_vocab, output_dim=self.embed_dim, name=key)
 
-    def embed(self, user, movie, check_shapes=True):
+    def get_logits(self, user, movie, check_shapes=True):
         # Get user and movie embeddings. Dot product is the score
         user_embed = self.embeds['user'](user)
         movie_embed = self.embeds['movie'](movie)
@@ -114,7 +114,7 @@ class TrainLoss(object):
 
         # Loss will be on the negative log likelihood that the img embed belongs to the correct class
         user, movie, labels, _ = self.model_params.next_element
-        predictions, _ = self.model_params.embed(user, movie)
+        predictions, _ = self.model_params.get_logits(user, movie)
 
         # Determine the mean squared error between pred and actual rating
         metrics['Mean_squared_error'] = tf.losses.mean_squared_error(labels=labels, predictions=predictions)
