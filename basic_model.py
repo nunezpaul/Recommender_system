@@ -48,7 +48,7 @@ class TestDataConfig(DataConfigBase):
     def __init__(self, batch_size=1024):
         super(TestDataConfig, self).__init__()
         self.batch_size = batch_size
-        self.filename = '{home}data/ml-latest/test.csv'.format(home=self.home)
+        self.filename = '{home}/data/ml-latest/test.csv'.format(home=self.home)
         self.dataset = self.create_dataset()
 
 class DataConfig(object):
