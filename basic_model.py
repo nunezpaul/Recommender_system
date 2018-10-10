@@ -9,7 +9,7 @@ class DataConfigBase(object):
     def __init__(self):
         self.iter_init = None
         self.next_element = None
-        self.home = os.path.expanduser("~")
+        self.home = os.path.dirname(os.path.realpath(__file__))
 
         # params for parsing csv
         self.header_lines = 1
@@ -39,7 +39,7 @@ class TrainDataConfig(DataConfigBase):
     def __init__(self, batch_size=64):
         super(TrainDataConfig, self).__init__()
         self.batch_size = batch_size
-        filename = 'data/ml-latest/shards/train.csv'
+        filename = '{home}/data/ml-latest/shards/train.csv'.format(home=self.home)
         self.filename = [filename.replace('.', '_{shard}.'.format(shard=i)) for i in range(10)]
         self.dataset = self.create_dataset()
 
@@ -48,7 +48,7 @@ class TestDataConfig(DataConfigBase):
     def __init__(self, batch_size=1024):
         super(TestDataConfig, self).__init__()
         self.batch_size = batch_size
-        self.filename = 'data/ml-latest/test.csv'.format(home=self.home)
+        self.filename = '{home}data/ml-latest/test.csv'.format(home=self.home)
         self.dataset = self.create_dataset()
 
 class DataConfig(object):
