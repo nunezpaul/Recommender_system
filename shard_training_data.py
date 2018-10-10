@@ -29,7 +29,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Shard training data in N csv files.')
     parser.add_argument('--num_shards', default=10, type=int,
                         help='Set the number of shards the training data will be broken up into.')
+    parser.add_argument('--filename', type=str, default='data/ml-latest/train.csv',
+                        help='file location for train.csv')
     args = parser.parse_args()
 
-    filename = '{home}/data/ml-latest/train.csv'.format(home=expanduser("~"))
-    shard_data(filename=filename, num_shards=args.num_shards)
+    shard_data(filename=args.filename, num_shards=args.num_shards)

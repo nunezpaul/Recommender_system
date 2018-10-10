@@ -58,6 +58,7 @@ if __name__ == '__main__':
                         """
                         '',
                         action='store_true')
-    parser.add_argument('--filename', type=str, default='data/ml-latest/ratings.csv')
+    parser.add_argument('--filename', type=str, default='data/ml-latest/ratings.csv',
+                        help='file location for ratings.csv')
     args = parser.parse_args()
     split_data(filename=args.filename, test_frac=args.test_frac, skip_count=args.skip_count)
