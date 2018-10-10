@@ -15,7 +15,7 @@ wget http://files.grouplens.org/datasets/movielens/ml-latest.zip
 unzip -o "ml-latest.zip"
 
 # Location where to place the data
-[ -d data ] && echo "Directory already exists." || { mkdir -p data && echo "Making new directory" }
+[ -d data ] && echo "Directory already exists." || ( mkdir -p data && echo "Making new directory" )
 echo "Moving file to $ROOT/data"
 mv ml-latest data
 echo "Cleaning up..."
@@ -31,7 +31,7 @@ python shard_training_data.py && echo "Sharding complete! Cleaning up..." || ech
 
 # Cleaning up data file directory
 SHARD_ROOT=/data/ml-latest/shards
-[ -d SHARD_ROOT ] && echo "Directory already exists." || { mkdir -p $SHARD_ROOT && echo "Making new directory." }
+[ -d SHARD_ROOT ] && echo "Directory already exists." || ( mkdir -p $SHARD_ROOT && echo "Making new directory." )
 mv data/ml-latest/train_* $SHARD_ROOT && echo "Done cleaning. Shards moved to $SHARD_ROOT" || echo "FAILED!"
 
 # Returning to original directory
