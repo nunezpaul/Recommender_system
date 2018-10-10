@@ -30,7 +30,7 @@ echo Sharding trainining files..
 python shard_training_data.py && echo "Sharding complete! Cleaning up..." || echo "FAILED!"
 
 # Cleaning up data file directory
-SHARD_ROOT=$ROOT/data/ml-latest/shards
+SHARD_ROOT=data/ml-latest/shards
 [ -d SHARD_ROOT ] && echo "Directory already exists." || ( mkdir -p $SHARD_ROOT && echo "Making new directory." )
 mv data/ml-latest/train_* $SHARD_ROOT && echo "Done cleaning. Shards moved to $SHARD_ROOT" || echo "FAILED!"
 
